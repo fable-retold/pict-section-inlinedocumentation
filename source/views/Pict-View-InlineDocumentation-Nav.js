@@ -91,10 +91,18 @@ const _ViewConfiguration =
 		}
 		.pict-inline-doc-nav-group-toggle {
 			margin-right: 0.35em;
-			font-size: 0.65em;
-			transition: transform 0.15s ease;
 			display: inline-flex;
 			align-items: center;
+			justify-content: center;
+			width: 0.85em;
+			height: 0.85em;
+			color: currentColor;
+			transition: transform 0.15s ease;
+		}
+		.pict-inline-doc-nav-group-toggle svg {
+			width: 100%;
+			height: 100%;
+			display: block;
 		}
 		.pict-inline-doc-nav-group-toggle.collapsed {
 			transform: rotate(-90deg);
@@ -600,7 +608,11 @@ class InlineDocumentationNavView extends libPictView
 
 			tmpHTML += '<div class="' + tmpGroupClass + '" data-group="' + this._escapeHTML(tmpGroupKey) + '">';
 			tmpHTML += '<div class="pict-inline-doc-nav-group-header">';
-			tmpHTML += '<span class="' + tmpToggleClass + '">&#x25BC;</span>';
+			tmpHTML += '<span class="' + tmpToggleClass + '" aria-hidden="true">'
+				+ '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" '
+				+ 'stroke-linecap="round" stroke-linejoin="round">'
+				+ '<polyline points="3 6 8 11 13 6"/>'
+				+ '</svg></span>';
 			tmpHTML += this._escapeHTML(tmpGroup.Name);
 			tmpHTML += '</div>';
 

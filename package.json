@@ -1,6 +1,6 @@
 {
 	"name": "pict-section-inlinedocumentation",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"description": "Pict embeddable inline documentation browser with topic support",
 	"main": "source/Pict-Section-InlineDocumentation.js",
 	"scripts": {
@@ -23,17 +23,17 @@
 	"homepage": "https://github.com/stevenvelozo/pict-section-inlinedocumentation#readme",
 	"dependencies": {
 		"lunr": "^2.3.9",
-		"pict-provider": "^1.0.12",
-		"pict-section-content": "^0.1.5",
-		"pict-section-markdowneditor": "^1.0.9",
-		"pict-section-modal": "^0.0.4",
+		"pict-provider": "^1.0.13",
+		"pict-section-content": "^1.0.0",
+		"pict-section-markdowneditor": "^1.0.15",
+		"pict-section-modal": "^1.0.1",
 		"pict-view": "^1.0.68"
 	},
 	"devDependencies": {
-		"pict": "^1.0.363",
-		"pict-docuserve": "^0.1.5",
+		"pict": "^1.0.368",
+		"pict-docuserve": "^1.0.0",
 		"puppeteer": "^24.40.0",
-		"quackage": "^1.1.0"
+		"quackage": "^1.2.3"
 	},
 	"mocha": {
 		"diff": true,
