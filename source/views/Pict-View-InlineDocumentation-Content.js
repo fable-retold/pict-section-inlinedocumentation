@@ -60,9 +60,13 @@ const _ViewConfiguration =
 		.pict-inline-doc-content a:hover {
 			text-decoration: underline;
 		}
+		/* Code blocks: bg + text both flow from background/text tokens
+		   so they re-skin coherently across themes. (Previous version
+		   paired background-tertiary with text-on-brand — both light
+		   in most palettes, producing invisible text.) */
 		.pict-inline-doc-content pre {
-			background: var(--theme-color-text-primary, #3D3229);
-			color: var(--theme-color-text-on-brand, #E8E0D4);
+			background: var(--theme-color-background-tertiary, #F0ECE4);
+			color:      var(--theme-color-text-primary,        #3D3229);
 			padding: 1em;
 			border-radius: 5px;
 			overflow-x: auto;
@@ -84,7 +88,7 @@ const _ViewConfiguration =
 			font-size: inherit;
 		}
 		.pict-inline-doc-content blockquote {
-			border-left: 3px solid #2E7D74;
+			border-left: 3px solid var(--theme-color-brand-primary, #2E7D74);
 			margin: 0.8em 0;
 			padding: 0.4em 0.8em;
 			background: var(--theme-color-background-secondary, #F7F5F0);
@@ -197,13 +201,13 @@ const _ViewConfiguration =
 			stroke-linejoin: round;
 		}
 		.pict-content-code-action-btn:hover {
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #FFFFFF);
+			background: var(--theme-color-brand-primary, #2E7D74);
+			color: var(--theme-color-text-on-brand, #FFFFFF);
 			border-color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.pict-content-code-action-btn.is-copied {
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #FFFFFF);
+			background: var(--theme-color-brand-primary, #2E7D74);
+			color: var(--theme-color-text-on-brand, #FFFFFF);
 			border-color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.pict-inline-doc-edit-toolbar {
@@ -229,7 +233,7 @@ const _ViewConfiguration =
 			align-items: center;
 			justify-content: center;
 			padding: 0.25em 0.6em;
-			border: 1px solid #D4A373;
+			border: 1px solid var(--theme-color-border-default, #D4A373);
 			border-radius: 3px;
 			background: var(--theme-color-background-panel,    #fff);
 			color: var(--theme-color-text-secondary, #5E5549);
@@ -241,12 +245,12 @@ const _ViewConfiguration =
 			background: var(--theme-color-background-tertiary, #F0ECE4);
 		}
 		.pict-inline-doc-edit-btn.primary {
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #fff);
+			background: var(--theme-color-brand-primary, #2E7D74);
+			color: var(--theme-color-text-on-brand, #fff);
 			border-color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.pict-inline-doc-edit-btn.primary:hover {
-			background: #266D65;
+			background: var(--theme-color-brand-primary-hover, #266D65);
 		}
 		.pict-inline-doc-edit-btn .btn-icon {
 			margin-right: 0.3em;
@@ -256,7 +260,7 @@ const _ViewConfiguration =
 		}
 		/* Tooltip placeholder: edit mode indicators */
 		[data-d-tooltip].pict-inline-doc-tooltip-edit-target {
-			outline: 1px dashed #2E7D74;
+			outline: 1px dashed var(--theme-color-brand-primary, #2E7D74);
 			outline-offset: 2px;
 			cursor: pointer;
 			position: relative;
@@ -268,8 +272,8 @@ const _ViewConfiguration =
 			right: -6px;
 			width: 14px;
 			height: 14px;
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #fff);
+			background: var(--theme-color-brand-primary, #2E7D74);
+			color: var(--theme-color-text-on-brand, #fff);
 			border-radius: 50%;
 			font-size: 9px;
 			line-height: 14px;
@@ -292,7 +296,7 @@ const _ViewConfiguration =
 		/* Empty icon tooltip in edit mode */
 		.pict-inline-doc-tooltip-empty .pict-inline-doc-tooltip-icon {
 			opacity: 0.4;
-			outline: 1px dashed #8A7F72;
+			outline: 1px dashed var(--theme-color-text-muted, #8A7F72);
 			outline-offset: 1px;
 			border-radius: 50%;
 		}

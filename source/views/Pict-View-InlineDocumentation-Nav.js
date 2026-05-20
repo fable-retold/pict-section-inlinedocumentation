@@ -124,7 +124,7 @@ const _ViewConfiguration =
 			background: var(--theme-color-background-tertiary, #EDE8DF);
 		}
 		.pict-inline-doc-nav-item.active {
-			background: #E8E3D8;
+			background: var(--theme-color-background-hover, #E8E3D8);
 			color: var(--theme-color-brand-primary, #2E7D74);
 			border-left-color: var(--theme-color-brand-primary, #2E7D74);
 			font-weight: 500;
@@ -214,8 +214,8 @@ const _ViewConfiguration =
 			display: inline-block;
 			margin: 0.5em 1em;
 			padding: 0.3em 0.7em;
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #fff);
+			background: var(--theme-color-brand-primary, #2E7D74);
+			color: var(--theme-color-text-on-brand, #fff);
 			border-radius: 4px;
 			font-size: 0.8em;
 			font-weight: 500;
@@ -258,15 +258,15 @@ const _ViewConfiguration =
 			color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.pict-inline-doc-nav-toolbar-btn.accent:hover {
-			background: #F0F9F7;
+			background: var(--theme-color-background-hover, #F0F9F7);
 		}
 		.pict-inline-doc-nav-toolbar-btn.active {
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #fff);
+			background: var(--theme-color-brand-primary, #2E7D74);
+			color: var(--theme-color-text-on-brand, #fff);
 			border-color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.pict-inline-doc-nav-toolbar-btn.active:hover {
-			background: #266D65;
+			background: var(--theme-color-brand-primary-hover, #266D65);
 		}
 		.pict-inline-doc-nav-toolbar-spacer {
 			flex: 1;

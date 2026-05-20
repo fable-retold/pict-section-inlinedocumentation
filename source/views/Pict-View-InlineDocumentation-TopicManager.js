@@ -65,8 +65,8 @@ const _ViewConfiguration =
 		}
 		.pict-inline-doc-tm-action-btn.danger:hover {
 			background: var(--theme-color-background-tertiary, #FDE8E8);
-			border-color: #E57373;
-			color: #C62828;
+			border-color: var(--theme-color-status-error, #E57373);
+			color: var(--theme-color-status-error, #C62828);
 		}
 		.pict-inline-doc-tm-new-topic {
 			display: flex;
@@ -74,7 +74,7 @@ const _ViewConfiguration =
 			justify-content: center;
 			padding: 0.7em;
 			margin-top: 0.5em;
-			border: 1px dashed #DDD6CA;
+			border: 1px dashed var(--theme-color-border-default, #DDD6CA);
 			border-radius: 4px;
 			color: var(--theme-color-brand-primary, #2E7D74);
 			font-size: 0.9em;
@@ -83,7 +83,7 @@ const _ViewConfiguration =
 			transition: background 0.1s, border-color 0.1s;
 		}
 		.pict-inline-doc-tm-new-topic:hover {
-			background: #F0F9F7;
+			background: var(--theme-color-background-hover, #F0F9F7);
 			border-color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.pict-inline-doc-tm-empty {
@@ -141,7 +141,7 @@ const _ViewConfiguration =
 			display: inline-flex;
 			align-items: center;
 			padding: 0.2em 0.5em;
-			background: #E8E3D8;
+			background: var(--theme-color-background-hover, #E8E3D8);
 			border-radius: 12px;
 			font-size: 0.82em;
 			color: var(--theme-color-text-primary, #3D3229);
@@ -155,7 +155,7 @@ const _ViewConfiguration =
 			line-height: 1;
 		}
 		.pict-inline-doc-tm-route-chip-remove:hover {
-			color: #C62828;
+			color: var(--theme-color-status-error, #C62828);
 		}
 		.pict-inline-doc-tm-route-actions {
 			display: flex;
@@ -182,7 +182,7 @@ const _ViewConfiguration =
 			color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.pict-inline-doc-tm-route-action-btn.accent:hover {
-			background: #F0F9F7;
+			background: var(--theme-color-background-hover, #F0F9F7);
 		}
 		.pict-inline-doc-tm-route-input-row {
 			display: none;
@@ -244,11 +244,11 @@ const _ViewConfiguration =
 		}
 		.pict-inline-doc-tm-wc-segment:hover {
 			border-color: var(--theme-color-brand-primary, #2E7D74);
-			background: #F0F9F7;
+			background: var(--theme-color-background-hover, #F0F9F7);
 		}
 		.pict-inline-doc-tm-wc-segment.selected {
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #fff);
+			background: var(--theme-color-brand-primary, #2E7D74);
+			color: var(--theme-color-text-on-brand, #fff);
 			border-color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.pict-inline-doc-tm-wc-segment.after-wildcard {
@@ -257,7 +257,7 @@ const _ViewConfiguration =
 			cursor: default;
 		}
 		.pict-inline-doc-tm-wc-segment.after-wildcard:hover {
-			border-color: #DDD6CA;
+			border-color: var(--theme-color-border-default, #DDD6CA);
 			background: var(--theme-color-background-panel,    #fff);
 		}
 		.pict-inline-doc-tm-wc-wildcard-star {
@@ -312,12 +312,12 @@ const _ViewConfiguration =
 			background: var(--theme-color-background-secondary, #F5F0E8);
 		}
 		.pict-inline-doc-tm-bind-topic-option.selected {
-			background: #F0F9F7;
+			background: var(--theme-color-background-hover, #F0F9F7);
 		}
 		.pict-inline-doc-tm-bind-radio {
 			width: 16px;
 			height: 16px;
-			border: 2px solid #DDD6CA;
+			border: 2px solid var(--theme-color-border-default, #DDD6CA);
 			border-radius: 50%;
 			margin-right: 0.6em;
 			flex-shrink: 0;
@@ -333,7 +333,7 @@ const _ViewConfiguration =
 			left: 3px;
 			width: 6px;
 			height: 6px;
-			background: #2E7D74;
+			background: var(--theme-color-brand-primary, #2E7D74);
 			border-radius: 50%;
 		}
 		.pict-inline-doc-tm-bind-route-type {
@@ -357,8 +357,8 @@ const _ViewConfiguration =
 			background: var(--theme-color-background-tertiary, #F0ECE4);
 		}
 		.pict-inline-doc-tm-bind-route-type-btn.selected {
-			background: #2E7D74;
-			color: var(--theme-color-background-panel, #fff);
+			background: var(--theme-color-brand-primary, #2E7D74);
+			color: var(--theme-color-text-on-brand, #fff);
 			border-color: var(--theme-color-brand-primary, #2E7D74);
 		}
 		.pict-inline-doc-tm-sidebar-list {
@@ -383,7 +383,7 @@ const _ViewConfiguration =
 			margin-left: 0.5em;
 		}
 		.pict-inline-doc-tm-validation-error {
-			color: #C62828;
+			color: var(--theme-color-status-error, #C62828);
 			font-size: 0.8em;
 			margin-top: 0.3em;
 		}
@@ -1440,7 +1440,7 @@ class InlineDocumentationTopicManagerView extends libPictView
 		tmpHTML += '<div class="pict-inline-doc-tm-bind-topic-option" data-topic-code="__NEW__">';
 		tmpHTML += '<div class="pict-inline-doc-tm-bind-radio"></div>';
 		tmpHTML += '<div class="pict-inline-doc-tm-topic-info">';
-		tmpHTML += '<div class="pict-inline-doc-tm-topic-title" style="color:#2E7D74;">+ Create New Topic</div>';
+		tmpHTML += '<div class="pict-inline-doc-tm-topic-title" style="color:var(--theme-color-brand-primary, #2E7D74);">+ Create New Topic</div>';
 		tmpHTML += '</div>';
 		tmpHTML += '</div>';
 
