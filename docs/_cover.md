@@ -13,3 +13,9 @@ A Pict section that turns Markdown documentation into in-app help -- from a simp
 [Architecture](#/page/architecture.md)
 [API Reference](#/page/api-reference.md)
 [GitHub](https://github.com/stevenvelozo/retold)
+
+<!-- docuserve:examples:start -->
+| Example | Complexity | Launch |
+|---------|------------|--------|
+| [Bookshop](examples/bookshop/README.md) | Intermediate | [&#9654; Launch](examples/bookshop/index.html) |
+<!-- docuserve:examples:end -->

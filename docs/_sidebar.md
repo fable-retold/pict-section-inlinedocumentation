@@ -16,9 +16,13 @@
   - [3. Hand-Authored Tooltips](#/page/embedding-level3-tooltips.md)
   - [4. Auto-Generated Tooltips](#/page/embedding-level4-autogen.md)
 
+- Examples
+
+  - [Bookshop](#/page/examples/bookshop/README.md)
+
 - Ecosystem
 
-  - [pict](/pict/pict/)
-  - [pict-view](/pict/pict-view/)
-  - [pict-docuserve](/pict/pict-docuserve/)
-  - [manyfest](/utility/manyfest/)
+  - [pict](https://stevenvelozo.github.io/pict/)
+  - [pict-view](https://stevenvelozo.github.io/pict-view/)
+  - [pict-docuserve](https://stevenvelozo.github.io/pict-docuserve/)
+  - [manyfest](https://stevenvelozo.github.io/manyfest/)

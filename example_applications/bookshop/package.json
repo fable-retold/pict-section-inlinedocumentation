@@ -30,5 +30,13 @@
 			"from": "./data/pict_documentation_topics.json",
 			"to": "./dist/docs/"
 		}
-	]
+	],
+	"retold": {
+		"ExampleApplication": {
+			"Stage": true,
+			"Title": "Bookshop",
+			"Summary": "E-commerce demo with route-mapped help, data-attribute tooltips, and F1 toggling for pict-section-inlinedocumentation.",
+			"Complexity": "Intermediate"
+		}
+	}
 }

@@ -1,5 +1,5 @@
 {
-	"Generated": "2026-05-22T05:45:26.607Z",
+	"Generated": "2026-05-23T01:51:09.418Z",
 	"Mode": "module",
 	"GitHubOrg": "stevenvelozo",
 	"DefaultBranch": "master",
@@ -51,6 +51,10 @@
 			"embedding-level2-routes.md",
 			"embedding-level3-tooltips.md",
 			"embedding-level4-autogen.md",
+			"examples/README.md",
+			"examples/bookshop/README.md",
+			"examples/bookshop/bookshop_example.js",
+			"examples/bookshop/index.html",
 			"index.html",
 			"overview.md",
 			"quickstart.md",

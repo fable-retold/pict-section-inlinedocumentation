@@ -1,5 +1,7 @@
 # pict-section-inlinedocumentation
 
+> **[&#9654; Read the Pict-Section-Inlinedocumentation Documentation](https://stevenvelozo.github.io/pict-section-inlinedocumentation/)** &mdash; interactive docs with the full API reference.
+
 > Embed context-aware documentation and tooltip help directly inside any Pict application.
 
 A Pict section that turns a folder of Markdown files into in-app help. Ships four progressively deeper embedding modes: a drop-in sidebar with a table of contents, route-mapped reading panes, hand-authored tooltips on specific controls, and auto-generated tooltips for every Manyfest-managed control in your app -- editable live when a content owner is signed in.
