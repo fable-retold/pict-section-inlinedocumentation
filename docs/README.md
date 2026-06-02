@@ -8,17 +8,8 @@ Part of the [Retold](https://github.com/stevenvelozo/retold) suite. Uses [`pict-
 
 ## Four Levels of Embeddedness
 
-```mermaid
-flowchart LR
-    L1[1. Sidebar + ToC] --> L2[2. Route-Mapped Content]
-    L2 --> L3[3. Hand-Authored Tooltips]
-    L3 --> L4[4. Auto-Generated Tooltips]
-
-    style L1 fill:#e3f2fd,stroke:#42a5f5,color:#333
-    style L2 fill:#e8f5e9,stroke:#66bb6a,color:#333
-    style L3 fill:#fff3e0,stroke:#ffa726,color:#333
-    style L4 fill:#fce4ec,stroke:#ef5350,color:#333
-```
+<!-- bespoke diagram: edit diagrams/four-levels-of-embeddedness.mmd or .hints.json, then: npx pict-renderer-graph build modules/pict/pict-section-inlinedocumentation/docs -->
+![Four Levels of Embeddedness](diagrams/four-levels-of-embeddedness.svg)
 
 Each level is a strict superset of the one before it.
 

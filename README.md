@@ -44,12 +44,8 @@ Add a container to your HTML and you're done:
 
 ## Four Levels of Embeddedness
 
-```mermaid
-flowchart LR
-    L1[1. Sidebar + ToC] --> L2[2. Route-Mapped]
-    L2 --> L3[3. Hand-Authored Tooltips]
-    L3 --> L4[4. Auto-Generated Tooltips]
-```
+<!-- bespoke diagram: edit diagrams/four-levels-of-embeddedness.mmd or .hints.json, then: npx pict-renderer-graph build modules/pict/pict-section-inlinedocumentation -->
+![Four Levels of Embeddedness](diagrams/four-levels-of-embeddedness.svg)
 
 | Level | What you get | Effort |
 |---|---|---|

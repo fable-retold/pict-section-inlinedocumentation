@@ -11,50 +11,8 @@
 
 ## Component Diagram
 
-```mermaid
-flowchart TB
-    subgraph Host["Host Pict Application"]
-        ROUTER[pict-router]
-        MANYFEST[Manyfest Descriptor]
-        DOM[DOM Controls]
-    end
-
-    subgraph Section["pict-section-inlinedocumentation"]
-        direction TB
-        CONFIG[Section Config]
-        STORE[TopicStore]
-        RENDER[TopicRenderer]
-        BINDER[TooltipBinder]
-        AUTOGEN[AutoTooltipGenerator]
-        SIDEBAR[SidebarView]
-        PANE[ReadingPaneView]
-        TOOLTIP[TooltipView]
-        CONFIG --> STORE
-        STORE --> RENDER
-        RENDER --> PANE
-        RENDER --> SIDEBAR
-        RENDER --> TOOLTIP
-        BINDER --> TOOLTIP
-        AUTOGEN --> BINDER
-    end
-
-    subgraph Sources["Content Sources"]
-        MD[(Markdown Files)]
-        CATALOG[(retold-catalog.json)]
-        KWIDX[(keyword-index.json)]
-    end
-
-    STORE -- fetch --> MD
-    STORE -- load --> CATALOG
-    STORE -- search --> KWIDX
-    ROUTER -- route change --> RENDER
-    MANYFEST -- hashes --> AUTOGEN
-    DOM -- data-help --> BINDER
-    BINDER -- hover/focus --> TOOLTIP
-    SIDEBAR --> DOM
-    PANE --> DOM
-    TOOLTIP --> DOM
-```
+<!-- bespoke diagram: edit diagrams/component-diagram.mmd or .hints.json, then: npx pict-renderer-graph build modules/pict/pict-section-inlinedocumentation/docs -->
+![Component Diagram](diagrams/component-diagram.svg)
 
 ## Services
 
