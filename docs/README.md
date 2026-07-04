@@ -4,7 +4,7 @@
 
 `pict-section-inlinedocumentation` is a Pict section that turns a folder of Markdown topics into in-app help. It spans the full spectrum from "a sidebar with a table of contents" to "every editable control on every screen has a live, editable tooltip" -- and you pick the level that matches your product.
 
-Part of the [Retold](https://github.com/stevenvelozo/retold) suite. Uses [`pict-view`](https://fable-retold.github.io/pict-view/) as its base, optionally consumes catalogs from [`pict-docuserve`](https://fable-retold.github.io/pict-docuserve/), and at the deepest level pairs with [`manyfest`](https://fable-retold.github.io/manyfest/) to auto-generate tooltips for every descriptor in your model.
+Part of the [Retold](https://github.com/fable-retold/retold) suite. Uses [`pict-view`](https://fable-retold.github.io/pict-view/) as its base, optionally consumes catalogs from [`pict-docuserve`](https://fable-retold.github.io/pict-docuserve/), and at the deepest level pairs with [`manyfest`](https://fable-retold.github.io/manyfest/) to auto-generate tooltips for every descriptor in your model.
 
 ## Four Levels of Embeddedness
 

@@ -12,7 +12,7 @@ A Pict section that turns Markdown documentation into in-app help -- from a simp
 [Get Started](#/page/quickstart.md)
 [Architecture](#/page/architecture.md)
 [API Reference](#/page/api-reference.md)
-[GitHub](https://github.com/stevenvelozo/retold)
+[GitHub](https://github.com/fable-retold/retold)
 
 <!-- docuserve:examples:start -->
 | Example | Complexity | Launch |
