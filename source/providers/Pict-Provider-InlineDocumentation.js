@@ -127,6 +127,21 @@ class InlineDocumentationProvider extends libPictProvider
 			this._onSave = tmpOptions.onSave;
 		}
 
+		// Store the structure-management callbacks if provided. Each is optional and
+		// purely additive: the Nav view only shows the matching affordance (New Folder,
+		// New Doc, rename/delete, drag reorder/move) when its callback is present, so a
+		// host that wires none of them gets exactly today's read-only browser.
+		//   onCreateFolder(pParentPath, pName, fCallback)
+		//   onCreateDocument(pParentPath, pName, fCallback)
+		//   onDeleteNode(pPath, pNodeType, fCallback)
+		//   onMoveNode(pFromPath, pToPath, fCallback)   (move into a folder, and rename)
+		//   onReorder(pParentPath, pOrderedNames, fCallback)
+		if (typeof tmpOptions.onCreateFolder === 'function') { this._onCreateFolder = tmpOptions.onCreateFolder; }
+		if (typeof tmpOptions.onCreateDocument === 'function') { this._onCreateDocument = tmpOptions.onCreateDocument; }
+		if (typeof tmpOptions.onDeleteNode === 'function') { this._onDeleteNode = tmpOptions.onDeleteNode; }
+		if (typeof tmpOptions.onMoveNode === 'function') { this._onMoveNode = tmpOptions.onMoveNode; }
+		if (typeof tmpOptions.onReorder === 'function') { this._onReorder = tmpOptions.onReorder; }
+
 		// Store the onTopicsSave callback if provided
 		if (typeof tmpOptions.onTopicsSave === 'function')
 		{
@@ -2098,6 +2113,124 @@ class InlineDocumentationProvider extends libPictProvider
 			});
 	}
 
+	// ================================================================
+	// Structure management (folders, move, reorder, delete)
+	// ================================================================
+
+	/**
+	 * Which structure affordances the host has wired. The Nav view reads this to
+	 * decide which controls to show; an unwired host gets a read-only browser.
+	 *
+	 * @returns {{ create:boolean, delete:boolean, move:boolean, reorder:boolean, any:boolean }}
+	 */
+	getStructureCapabilities()
+	{
+		let tmpCreate = (typeof this._onCreateFolder === 'function') || (typeof this._onCreateDocument === 'function');
+		let tmpDelete = (typeof this._onDeleteNode === 'function');
+		let tmpMove = (typeof this._onMoveNode === 'function');
+		let tmpReorder = (typeof this._onReorder === 'function');
+		return {
+			create: tmpCreate,
+			createFolder: (typeof this._onCreateFolder === 'function'),
+			createDocument: (typeof this._onCreateDocument === 'function'),
+			delete: tmpDelete,
+			move: tmpMove,
+			reorder: tmpReorder,
+			any: tmpCreate || tmpDelete || tmpMove || tmpReorder
+		};
+	}
+
+	/**
+	 * Reload the sidebar from the server and re-render the navigation. Called after
+	 * a structure change persists so the tree reflects the server's authoritative
+	 * order/shape (the drag is optimistic; this makes it real).
+	 *
+	 * @param {Function} [fCallback] - Callback when the reload completes
+	 */
+	reloadSidebar(fCallback)
+	{
+		let tmpCallback = (typeof (fCallback) === 'function') ? fCallback : () => {};
+		this._loadSidebar(() =>
+		{
+			this._markExternalSidebarItems();
+			let tmpNavView = this.pict.views['InlineDoc-Nav'];
+			if (tmpNavView)
+			{
+				tmpNavView.render();
+			}
+			return tmpCallback();
+		});
+	}
+
+	// Small toast helper (falls back to a log if the modal is not present).
+	_structureToast(pMessage, pType)
+	{
+		let tmpModal = this.pict.views['Pict-Section-Modal'];
+		if (tmpModal && typeof tmpModal.toast === 'function')
+		{
+			tmpModal.toast(pMessage, { type: pType || 'info', duration: (pType === 'error') ? 6000 : 2500 });
+		}
+		else if (this.log)
+		{
+			this.log.info('InlineDocumentation: ' + pMessage);
+		}
+	}
+
+	// Run a host structure callback, then reload the sidebar on success (or toast the
+	// error). Shared by every request* method below so the persist-then-refetch flow
+	// is identical for create/delete/move/reorder.
+	_runStructureOp(fOp, pSuccessMessage, fCallback)
+	{
+		let tmpSelf = this;
+		let tmpCallback = (typeof (fCallback) === 'function') ? fCallback : () => {};
+		fOp((pError) =>
+		{
+			if (pError)
+			{
+				tmpSelf._structureToast((pError && pError.message) || String(pError), 'error');
+				return tmpCallback(pError);
+			}
+			tmpSelf.reloadSidebar(() =>
+			{
+				if (pSuccessMessage) { tmpSelf._structureToast(pSuccessMessage, 'success'); }
+				return tmpCallback(null);
+			});
+		});
+	}
+
+	requestCreateFolder(pParentPath, pName, fCallback)
+	{
+		if (typeof this._onCreateFolder !== 'function') { return; }
+		let tmpParent = pParentPath || '';
+		this._runStructureOp((fDone) => this._onCreateFolder(tmpParent, pName, fDone), 'Folder created.', fCallback);
+	}
+
+	requestCreateDocument(pParentPath, pName, fCallback)
+	{
+		if (typeof this._onCreateDocument !== 'function') { return; }
+		let tmpParent = pParentPath || '';
+		this._runStructureOp((fDone) => this._onCreateDocument(tmpParent, pName, fDone), 'Document created.', fCallback);
+	}
+
+	requestDeleteNode(pPath, pNodeType, fCallback)
+	{
+		if (typeof this._onDeleteNode !== 'function' || !pPath) { return; }
+		this._runStructureOp((fDone) => this._onDeleteNode(pPath, pNodeType || 'file', fDone), 'Deleted.', fCallback);
+	}
+
+	requestMoveNode(pFromPath, pToPath, fCallback)
+	{
+		if (typeof this._onMoveNode !== 'function' || !pFromPath || !pToPath || pFromPath === pToPath) { return; }
+		this._runStructureOp((fDone) => this._onMoveNode(pFromPath, pToPath, fDone), 'Moved.', fCallback);
+	}
+
+	requestReorder(pParentPath, pOrderedNames, fCallback)
+	{
+		if (typeof this._onReorder !== 'function' || !Array.isArray(pOrderedNames)) { return; }
+		let tmpParent = pParentPath || '';
+		this._runStructureOp((fDone) => this._onReorder(tmpParent, pOrderedNames, fDone), '', fCallback);
+	}
+
 	/**
 	 * Load topic definitions from a JSON file.
 	 *
@@ -2186,10 +2319,29 @@ class InlineDocumentationProvider extends libPictProvider
 			let tmpItemContent = tmpListMatch[1].trim();
 			let tmpLinkMatch = tmpItemContent.match(/^\[([^\]]+)\]\(([^)]+)\)/);
 
+			// A link whose target ends in '/' is a FOLDER reference, not a document:
+			// the server can emit `- [Label](real/folder/path/)` so the client knows a
+			// folder's real (possibly relabeled, possibly empty) path for structure ops.
+			// Everything else keeps working: a folder rendered as a plain `- Label` with
+			// no link still parses as a pathless folder (older sidebars, backward compat).
+			let tmpIsFolderLink = tmpLinkMatch && /\/$/.test(tmpLinkMatch[2].trim());
+			let tmpFolderPath = tmpIsFolderLink ? this._normalizePath(tmpLinkMatch[2].trim().replace(/\/+$/, '')) : '';
+
 			if (tmpIndent < 2)
 			{
 				// Top-level item — group header
-				if (tmpLinkMatch)
+				if (tmpIsFolderLink)
+				{
+					tmpCurrentGroup = {
+						Name: tmpLinkMatch[1].trim(),
+						Key: tmpLinkMatch[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+						Path: '',
+						FolderPath: tmpFolderPath,
+						Items: []
+					};
+					tmpGroups.push(tmpCurrentGroup);
+				}
+				else if (tmpLinkMatch)
 				{
 					let tmpName = tmpLinkMatch[1].trim();
 					let tmpPath = tmpLinkMatch[2].trim();
@@ -2215,11 +2367,22 @@ class InlineDocumentationProvider extends libPictProvider
 			}
 			else if (tmpCurrentGroup)
 			{
-				// Indented item — a document (link) or a sub-folder (no link)
-				// within the current group. Capture the nesting Level from the
-				// indentation so the nav can render real hierarchy.
+				// Indented item — a document (link), a folder reference (trailing-slash
+				// link), or a legacy sub-folder (no link) within the current group.
+				// Capture the nesting Level from the indentation so the nav can render
+				// real hierarchy.
 				let tmpLevel = Math.max(0, Math.floor((tmpIndent - 2) / 2));
-				if (tmpLinkMatch)
+				if (tmpIsFolderLink)
+				{
+					tmpCurrentGroup.Items.push({
+						Name: tmpLinkMatch[1].trim(),
+						Path: '',
+						FolderPath: tmpFolderPath,
+						Level: tmpLevel,
+						IsFolder: true
+					});
+				}
+				else if (tmpLinkMatch)
 				{
 					tmpCurrentGroup.Items.push({
 						Name: tmpLinkMatch[1].trim(),

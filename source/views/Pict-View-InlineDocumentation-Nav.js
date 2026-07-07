@@ -290,6 +290,63 @@ const _ViewConfiguration =
 		.pict-inline-doc-nav-toolbar-spacer {
 			flex: 1;
 		}
+		/* Structure management: per-node hover actions (rename / delete) */
+		.pict-inline-doc-nav-item,
+		.pict-inline-doc-nav-group-header {
+			position: relative;
+		}
+		.pict-inline-doc-nav-node-actions {
+			position: absolute;
+			right: 0.35em;
+			top: 50%;
+			transform: translateY(-50%);
+			display: none;
+			align-items: center;
+			gap: 0.1em;
+		}
+		.pict-inline-doc-nav-item:hover > .pict-inline-doc-nav-node-actions,
+		.pict-inline-doc-nav-group-header:hover > .pict-inline-doc-nav-node-actions {
+			display: inline-flex;
+		}
+		.pict-inline-doc-nav-node-action {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.4em;
+			height: 1.4em;
+			border-radius: 3px;
+			color: var(--theme-color-text-muted, #8A7F72);
+			background: var(--theme-color-background-panel, #fff);
+			cursor: pointer;
+			opacity: 0.85;
+		}
+		.pict-inline-doc-nav-node-action:hover {
+			background: var(--theme-color-background-tertiary, #EDE8DF);
+			color: var(--theme-color-text-primary, #3D3229);
+			opacity: 1;
+		}
+		.pict-inline-doc-nav-node-action.danger:hover {
+			color: var(--theme-color-status-error, #B3261E);
+		}
+		/* Drag-and-drop reorder / move affordances */
+		.pict-inline-doc-nav-item[draggable="true"],
+		.pict-inline-doc-nav-group-header[draggable="true"] {
+			cursor: grab;
+		}
+		.pict-inline-doc-nav-dragging {
+			opacity: 0.45;
+		}
+		.pict-inline-doc-nav-drop-into {
+			background: var(--theme-color-background-hover, #E8E3D8) !important;
+			outline: 1px dashed var(--theme-color-brand-primary, #2E7D74);
+			outline-offset: -1px;
+		}
+		.pict-inline-doc-nav-drop-before {
+			box-shadow: inset 0 2px 0 0 var(--theme-color-brand-primary, #2E7D74);
+		}
+		.pict-inline-doc-nav-drop-after {
+			box-shadow: inset 0 -2px 0 0 var(--theme-color-brand-primary, #2E7D74);
+		}
 	`,
 
 	Templates:
@@ -502,19 +559,65 @@ class InlineDocumentationNavView extends libPictView
 	}
 
 	/**
-	 * Render the topic management toolbar HTML.
+	 * The host-wired structure capabilities (create/delete/move/reorder). Falls back
+	 * to an all-false shape when the provider or the API is unavailable, so callers
+	 * can read it unconditionally.
+	 *
+	 * @returns {object} capability flags
+	 */
+	_structureCaps()
+	{
+		let tmpProvider = this.pict.providers['Pict-InlineDocumentation'];
+		if (tmpProvider && typeof tmpProvider.getStructureCapabilities === 'function')
+		{
+			return tmpProvider.getStructureCapabilities();
+		}
+		return { create: false, createFolder: false, createDocument: false, delete: false, move: false, reorder: false, any: false };
+	}
+
+	/**
+	 * Render the toolbar HTML: structure controls (New Folder / New Doc) when the
+	 * host wired them, plus the topic-management controls when TopicManagerEnabled.
 	 *
 	 * @param {object} pState - The InlineDocumentation state
 	 * @returns {string} HTML string for the toolbar, or empty string
 	 */
 	_renderToolbar(pState)
 	{
-		if (!pState.TopicManagerEnabled)
+		let tmpCaps = this._structureCaps();
+
+		if (!pState.TopicManagerEnabled && !tmpCaps.any)
 		{
 			return '';
 		}
 
 		let tmpHTML = '<div class="pict-inline-doc-nav-toolbar">';
+
+		// Structure buttons — only the ones the host actually wired.
+		if (tmpCaps.createFolder)
+		{
+			tmpHTML += '<button class="pict-inline-doc-nav-toolbar-btn" id="InlineDoc-Nav-NewFolder" title="New folder">'
+				+ '<svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+				+ '<path d="M1.5 4.5a1 1 0 0 1 1-1h3.2l1.3 1.4h5.5a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"/>'
+				+ '<line x1="8" y1="7" x2="8" y2="11"/><line x1="6" y1="9" x2="10" y2="9"/>'
+				+ '</svg></button>';
+		}
+		if (tmpCaps.createDocument)
+		{
+			tmpHTML += '<button class="pict-inline-doc-nav-toolbar-btn" id="InlineDoc-Nav-NewDoc" title="New document">'
+				+ '<svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+				+ '<path d="M4 2.5H9L12 5.5V13.5H4Z"/><polyline points="9 2.5 9 5.5 12 5.5"/>'
+				+ '<line x1="8" y1="8" x2="8" y2="11.5"/><line x1="6.25" y1="9.75" x2="9.75" y2="9.75"/>'
+				+ '</svg></button>';
+		}
+
+		if (!pState.TopicManagerEnabled)
+		{
+			tmpHTML += '<span class="pict-inline-doc-nav-toolbar-spacer"></span>';
+			tmpHTML += '</div>';
+			return tmpHTML;
+		}
+
 		tmpHTML += '<button class="pict-inline-doc-nav-toolbar-btn" id="InlineDoc-Nav-ManageTopics" title="Manage Topics">'
 			+ '<svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
 			+ '<circle cx="8" cy="8" r="2.5"/>'
@@ -543,6 +646,59 @@ class InlineDocumentationNavView extends libPictView
 	}
 
 	/**
+	 * Drag attributes for a movable / reorderable node. Emitted only when the host
+	 * wired move or reorder and the node has a real path.
+	 *
+	 * @param {string} pPath - The node's real lake path
+	 * @param {string} pType - 'file' or 'folder'
+	 * @param {object} pCaps - Structure capabilities
+	 * @returns {string} An attribute fragment (leading space) or ''
+	 */
+	_dragAttrs(pPath, pType, pCaps)
+	{
+		if (!pPath || (!pCaps.move && !pCaps.reorder))
+		{
+			return '';
+		}
+		return ' draggable="true" data-node-path="' + this._escapeHTML(pPath) + '" data-node-type="' + pType + '"';
+	}
+
+	/**
+	 * Per-node hover actions (rename / delete), gated by capabilities. Requires a
+	 * real path; a legacy pathless folder gets no actions.
+	 *
+	 * @param {string} pPath - The node's real lake path
+	 * @param {string} pType - 'file' or 'folder'
+	 * @param {object} pCaps - Structure capabilities
+	 * @returns {string} HTML for the actions cluster, or ''
+	 */
+	_nodeActionsHTML(pPath, pType, pCaps)
+	{
+		if (!pPath || (!pCaps.move && !pCaps.delete))
+		{
+			return '';
+		}
+		// Actions carry their own data-action-path / data-action-type (NOT data-node-path)
+		// so the drag / reorder queries, which select real nodes by [data-node-path], never
+		// match these buttons.
+		let tmpHTML = '<span class="pict-inline-doc-nav-node-actions">';
+		if (pCaps.move)
+		{
+			tmpHTML += '<span class="pict-inline-doc-nav-node-action" data-action="rename" data-action-path="' + this._escapeHTML(pPath) + '" data-action-type="' + pType + '" title="Rename">'
+				+ '<svg width="0.85em" height="0.85em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L6 12l-2.5.5L4 10z"/></svg>'
+				+ '</span>';
+		}
+		if (pCaps.delete)
+		{
+			tmpHTML += '<span class="pict-inline-doc-nav-node-action danger" data-action="delete" data-action-path="' + this._escapeHTML(pPath) + '" data-action-type="' + pType + '" title="Delete">'
+				+ '<svg width="0.85em" height="0.85em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5 4 13.5 4"/><path d="M5.5 4V2.8h5V4M6.5 7v4M9.5 7v4M4 4l0.7 9h6.6L12 4"/></svg>'
+				+ '</span>';
+		}
+		tmpHTML += '</span>';
+		return tmpHTML;
+	}
+
+	/**
 	 * Build the group/item/heading tree HTML.
 	 *
 	 * @param {object} pState - The InlineDocumentation state
@@ -553,6 +709,7 @@ class InlineDocumentationNavView extends libPictView
 	 */
 	_renderGroupTree(pState, pCurrentPath, pHeadings, pFilterText)
 	{
+		let tmpCaps = this._structureCaps();
 		let tmpHTML = '';
 		let tmpGroups = pState.SidebarGroups || [];
 		let tmpActiveTopic = pState.Topic;
@@ -635,14 +792,21 @@ class InlineDocumentationNavView extends libPictView
 			let tmpGroupClass = 'pict-inline-doc-nav-group' + (tmpIsGroupCollapsed ? ' collapsed' : '');
 			let tmpToggleClass = 'pict-inline-doc-nav-group-toggle' + (tmpIsGroupCollapsed ? ' collapsed' : '');
 
+			// A top-level group is a root node: a folder (its real FolderPath) or a
+			// root document (its Path). Drag attrs on the header enable root reorder /
+			// drop-into-folder; the hover actions enable rename/delete of the top node.
+			let tmpGroupPath = tmpGroup.FolderPath || tmpGroup.Path || '';
+			let tmpGroupType = tmpGroup.FolderPath ? 'folder' : 'file';
+
 			tmpHTML += '<div class="' + tmpGroupClass + '" data-group="' + this._escapeHTML(tmpGroupKey) + '">';
-			tmpHTML += '<div class="pict-inline-doc-nav-group-header">';
+			tmpHTML += '<div class="pict-inline-doc-nav-group-header"' + this._dragAttrs(tmpGroupPath, tmpGroupType, tmpCaps) + '>';
 			tmpHTML += '<span class="' + tmpToggleClass + '" aria-hidden="true">'
 				+ '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" '
 				+ 'stroke-linecap="round" stroke-linejoin="round">'
 				+ '<polyline points="3 6 8 11 13 6"/>'
 				+ '</svg></span>';
 			tmpHTML += this._escapeHTML(tmpGroup.Name);
+			tmpHTML += this._nodeActionsHTML(tmpGroupPath, tmpGroupType, tmpCaps);
 			tmpHTML += '</div>';
 
 			tmpHTML += '<div class="pict-inline-doc-nav-group-items">';
@@ -652,9 +816,11 @@ class InlineDocumentationNavView extends libPictView
 			{
 				let tmpActive = (pCurrentPath === tmpGroup.Path) ? ' active' : '';
 				tmpHTML += '<a class="pict-inline-doc-nav-item' + tmpActive
-					+ '" data-doc-path="' + this._escapeHTML(tmpGroup.Path) + '">'
+					+ '" data-doc-path="' + this._escapeHTML(tmpGroup.Path) + '"'
+					+ this._dragAttrs(tmpGroup.Path, 'file', tmpCaps) + '>'
 					+ this._fileIconSVG()
 					+ this._escapeHTML(tmpGroup.Name)
+					+ this._nodeActionsHTML(tmpGroup.Path, 'file', tmpCaps)
 					+ '</a>';
 
 				// If this is the active item, render heading sub-items
@@ -672,23 +838,32 @@ class InlineDocumentationNavView extends libPictView
 				// Sub-folder node (no document of its own). Indent it by its
 				// level and, when it has descendants, make it clickable so it
 				// opens its first child document; mark it with a folder glyph.
+				// A real FolderPath (trailing-slash sidebar link) makes it a drag
+				// source, a drop target, and rename/delete-able.
 				if (!tmpItem.Path)
 				{
+					let tmpFolderPath = tmpItem.FolderPath || '';
+					let tmpFolderDrag = this._dragAttrs(tmpFolderPath, 'folder', tmpCaps);
+					let tmpFolderActions = this._nodeActionsHTML(tmpFolderPath, 'folder', tmpCaps);
 					if (tmpItem.FirstChildPath)
 					{
 						// Folders are navigational shortcuts to their first child; the
 						// child item carries the active highlight, so the folder doesn't.
 						tmpHTML += '<a class="pict-inline-doc-nav-item pict-inline-doc-nav-folder'
-							+ '" data-doc-path="' + this._escapeHTML(tmpItem.FirstChildPath) + '"' + tmpIndent + '>'
+							+ '" data-doc-path="' + this._escapeHTML(tmpItem.FirstChildPath) + '"' + tmpIndent + tmpFolderDrag + '>'
 							+ this._folderIconSVG()
 							+ this._escapeHTML(tmpItem.Name)
+							+ tmpFolderActions
 							+ '</a>';
 					}
 					else
 					{
-						tmpHTML += '<span class="pict-inline-doc-nav-item pict-inline-doc-nav-folder"' + tmpIndent + '>'
+						// An empty folder (marker-only) still gets its path, so it is a
+						// valid drop target and can be renamed / removed.
+						tmpHTML += '<span class="pict-inline-doc-nav-item pict-inline-doc-nav-folder"' + tmpIndent + tmpFolderDrag + '>'
 							+ this._folderIconSVG()
 							+ this._escapeHTML(tmpItem.Name)
+							+ tmpFolderActions
 							+ '</span>';
 					}
 					continue;
@@ -708,9 +883,11 @@ class InlineDocumentationNavView extends libPictView
 				{
 					let tmpActive = (pCurrentPath === tmpItem.Path) ? ' active' : '';
 					tmpHTML += '<a class="pict-inline-doc-nav-item' + tmpActive
-						+ '" data-doc-path="' + this._escapeHTML(tmpItem.Path) + '"' + tmpIndent + '>'
+						+ '" data-doc-path="' + this._escapeHTML(tmpItem.Path) + '"' + tmpIndent
+						+ this._dragAttrs(tmpItem.Path, 'file', tmpCaps) + '>'
 						+ this._fileIconSVG()
 						+ this._escapeHTML(tmpItem.Name)
+						+ this._nodeActionsHTML(tmpItem.Path, 'file', tmpCaps)
 						+ '</a>';
 
 					// If this is the active item, render heading sub-items
@@ -1087,6 +1264,306 @@ class InlineDocumentationNavView extends libPictView
 				}
 			});
 		}
+
+		// Structure management: toolbar create buttons, per-node rename/delete, drag reorder/move.
+		this._wireStructureHandlers(pContainer);
+		this._wireDragDrop(pContainer);
+	}
+
+	// ─── structure management wiring ─────────────────────────────────────
+	_provider() { return this.pict.providers['Pict-InlineDocumentation']; }
+	_modal() { return this.pict.views['Pict-Section-Modal']; }
+	_dirname(pPath) { let p = String(pPath || ''); let i = p.lastIndexOf('/'); return i >= 0 ? p.slice(0, i) : ''; }
+	_basename(pPath) { let p = String(pPath || ''); let i = p.lastIndexOf('/'); return i >= 0 ? p.slice(i + 1) : p; }
+
+	/**
+	 * Prompt for a single line of text via the modal (no native prompt()). Resolves
+	 * to the trimmed value, or null if cancelled / empty.
+	 */
+	_promptForName(pTitle, pLabel, pDefault, pPlaceholder)
+	{
+		let tmpModal = this._modal();
+		if (!tmpModal || typeof tmpModal.show !== 'function')
+		{
+			return Promise.resolve(null);
+		}
+		let tmpDefault = this._escapeHTML(pDefault || '');
+		let tmpContent = '<p style="margin:0 0 0.4em">' + this._escapeHTML(pLabel || 'Name') + '</p>'
+			+ '<input type="text" id="InlineDoc-Structure-Prompt" class="pict-input" style="width:100%;box-sizing:border-box;padding:0.4em 0.5em" '
+			+ 'value="' + tmpDefault + '" placeholder="' + this._escapeHTML(pPlaceholder || '') + '" '
+			+ 'onkeydown="if(event.key===\'Enter\'){event.preventDefault();}" />';
+		return tmpModal.show(
+			{
+				title: pTitle || 'Name',
+				content: tmpContent,
+				closeable: true,
+				width: '420px',
+				buttons:
+				[
+					{ Hash: 'cancel', Label: 'Cancel' },
+					{ Hash: 'ok', Label: 'OK', Style: 'primary' }
+				],
+				onOpen: () =>
+				{
+					let tmpInput = document.getElementById('InlineDoc-Structure-Prompt');
+					if (tmpInput) { tmpInput.focus(); tmpInput.select(); }
+				}
+			}).then((pChoice) =>
+			{
+				if (pChoice !== 'ok') { return null; }
+				let tmpInput = document.getElementById('InlineDoc-Structure-Prompt');
+				let tmpValue = tmpInput ? String(tmpInput.value || '').trim() : '';
+				return tmpValue || null;
+			});
+	}
+
+	/**
+	 * Wire the toolbar create buttons and the per-node rename / delete actions.
+	 *
+	 * @param {HTMLElement} pContainer - The nav container element
+	 */
+	_wireStructureHandlers(pContainer)
+	{
+		let tmpSelf = this;
+		let tmpProvider = this._provider();
+		if (!tmpProvider) { return; }
+
+		// New Folder
+		let tmpNewFolderBtn = pContainer.querySelector('#InlineDoc-Nav-NewFolder');
+		if (tmpNewFolderBtn)
+		{
+			tmpNewFolderBtn.addEventListener('click', (pEvent) =>
+			{
+				pEvent.stopPropagation();
+				tmpSelf._promptForName('New folder', 'Folder name (a path like guides/setup nests it):', '', 'folder-name').then((pName) =>
+				{
+					if (pName) { tmpProvider.requestCreateFolder('', pName); }
+				});
+			});
+		}
+
+		// New Document
+		let tmpNewDocBtn = pContainer.querySelector('#InlineDoc-Nav-NewDoc');
+		if (tmpNewDocBtn)
+		{
+			tmpNewDocBtn.addEventListener('click', (pEvent) =>
+			{
+				pEvent.stopPropagation();
+				tmpSelf._promptForName('New document', 'Document name (.md is added if omitted):', '', 'my-document').then((pName) =>
+				{
+					if (pName) { tmpProvider.requestCreateDocument('', pName); }
+				});
+			});
+		}
+
+		// Rename / Delete actions on every node
+		let tmpActions = pContainer.querySelectorAll('.pict-inline-doc-nav-node-action[data-action]');
+		for (let i = 0; i < tmpActions.length; i++)
+		{
+			let tmpAction = tmpActions[i];
+			tmpAction.addEventListener('click', (pEvent) =>
+			{
+				pEvent.preventDefault();
+				pEvent.stopPropagation();
+				let tmpKind = tmpAction.getAttribute('data-action');
+				let tmpPath = tmpAction.getAttribute('data-action-path');
+				let tmpType = tmpAction.getAttribute('data-action-type') || 'file';
+				if (!tmpPath) { return; }
+				if (tmpKind === 'rename')
+				{
+					let tmpParent = tmpSelf._dirname(tmpPath);
+					let tmpOldName = tmpSelf._basename(tmpPath);
+					tmpSelf._promptForName('Rename', 'New name:', tmpOldName, '').then((pName) =>
+					{
+						if (!pName) { return; }
+						let tmpNewName = pName.replace(/^\/+|\/+$/g, '');
+						if (!tmpNewName || tmpNewName === tmpOldName) { return; }
+						let tmpNewPath = tmpParent ? (tmpParent + '/' + tmpNewName) : tmpNewName;
+						tmpProvider.requestMoveNode(tmpPath, tmpNewPath);
+					});
+				}
+				else if (tmpKind === 'delete')
+				{
+					let tmpModal = tmpSelf._modal();
+					let tmpName = tmpSelf._basename(tmpPath);
+					let tmpMessage = (tmpType === 'folder')
+						? ('Delete the folder "' + tmpName + '" and everything inside it? This cannot be undone.')
+						: ('Delete "' + tmpName + '"? This cannot be undone.');
+					if (tmpModal && typeof tmpModal.confirm === 'function')
+					{
+						tmpModal.confirm(tmpMessage, { title: 'Delete', confirmLabel: 'Delete', cancelLabel: 'Cancel', dangerous: true }).then((pOk) =>
+						{
+							if (pOk) { tmpProvider.requestDeleteNode(tmpPath, tmpType); }
+						});
+					}
+					else
+					{
+						tmpProvider.requestDeleteNode(tmpPath, tmpType);
+					}
+				}
+			});
+		}
+	}
+
+	/**
+	 * Collect the ordered basenames of every node sharing a parent, in DOM order
+	 * (deduped by path so a group whose header and inner item share a path counts
+	 * once). Used to persist a drag reorder.
+	 *
+	 * @param {HTMLElement} pContainer - The nav container
+	 * @param {string} pParent - The parent path ('' for root)
+	 * @returns {Array<string>} Ordered basenames
+	 */
+	_gatherSiblingNames(pContainer, pParent)
+	{
+		let tmpNodes = pContainer.querySelectorAll('[data-node-path]');
+		let tmpNames = [];
+		let tmpSeen = {};
+		for (let i = 0; i < tmpNodes.length; i++)
+		{
+			let tmpPath = tmpNodes[i].getAttribute('data-node-path');
+			if (!tmpPath || this._dirname(tmpPath) !== pParent) { continue; }
+			if (tmpSeen[tmpPath]) { continue; }
+			tmpSeen[tmpPath] = true;
+			tmpNames.push(this._basename(tmpPath));
+		}
+		return tmpNames;
+	}
+
+	/**
+	 * Wire HTML5 drag-and-drop: reorder within a parent (-> requestReorder) and drop
+	 * onto a folder to move into it (-> requestMoveNode). Optimistic visual cues; the
+	 * server rewrite + reloadSidebar make it authoritative.
+	 *
+	 * @param {HTMLElement} pContainer - The nav container element
+	 */
+	_wireDragDrop(pContainer)
+	{
+		let tmpSelf = this;
+		let tmpProvider = this._provider();
+		if (!tmpProvider) { return; }
+		let tmpCaps = this._structureCaps();
+		if (!tmpCaps.move && !tmpCaps.reorder) { return; }
+
+		let tmpDraggables = pContainer.querySelectorAll('[data-node-path][draggable="true"]');
+		let fClearMarks = () =>
+		{
+			let tmpMarked = pContainer.querySelectorAll('.pict-inline-doc-nav-drop-into, .pict-inline-doc-nav-drop-before, .pict-inline-doc-nav-drop-after');
+			for (let i = 0; i < tmpMarked.length; i++)
+			{
+				tmpMarked[i].classList.remove('pict-inline-doc-nav-drop-into', 'pict-inline-doc-nav-drop-before', 'pict-inline-doc-nav-drop-after');
+			}
+		};
+
+		for (let i = 0; i < tmpDraggables.length; i++)
+		{
+			let tmpEl = tmpDraggables[i];
+
+			tmpEl.addEventListener('dragstart', (pEvent) =>
+			{
+				let tmpPath = tmpEl.getAttribute('data-node-path');
+				tmpSelf._dragState =
+				{
+					Path: tmpPath,
+					Type: tmpEl.getAttribute('data-node-type') || 'file',
+					Parent: tmpSelf._dirname(tmpPath),
+					Name: tmpSelf._basename(tmpPath)
+				};
+				tmpEl.classList.add('pict-inline-doc-nav-dragging');
+				if (pEvent.dataTransfer)
+				{
+					pEvent.dataTransfer.effectAllowed = 'move';
+					try { pEvent.dataTransfer.setData('text/plain', tmpPath); } catch (pErr) { /* IE guard */ }
+				}
+			});
+
+			tmpEl.addEventListener('dragend', () =>
+			{
+				tmpEl.classList.remove('pict-inline-doc-nav-dragging');
+				fClearMarks();
+				tmpSelf._dragState = null;
+			});
+
+			tmpEl.addEventListener('dragover', (pEvent) =>
+			{
+				let tmpDrag = tmpSelf._dragState;
+				if (!tmpDrag) { return; }
+				let tmpTargetPath = tmpEl.getAttribute('data-node-path');
+				let tmpTargetType = tmpEl.getAttribute('data-node-type') || 'file';
+				let tmpMode = tmpSelf._dropModeFor(tmpDrag, tmpTargetPath, tmpTargetType, pEvent, tmpEl, tmpCaps);
+				if (!tmpMode) { return; }
+				pEvent.preventDefault();
+				if (pEvent.dataTransfer) { pEvent.dataTransfer.dropEffect = 'move'; }
+				tmpEl.classList.remove('pict-inline-doc-nav-drop-into', 'pict-inline-doc-nav-drop-before', 'pict-inline-doc-nav-drop-after');
+				tmpEl.classList.add('pict-inline-doc-nav-drop-' + tmpMode);
+			});
+
+			tmpEl.addEventListener('dragleave', () =>
+			{
+				tmpEl.classList.remove('pict-inline-doc-nav-drop-into', 'pict-inline-doc-nav-drop-before', 'pict-inline-doc-nav-drop-after');
+			});
+
+			tmpEl.addEventListener('drop', (pEvent) =>
+			{
+				let tmpDrag = tmpSelf._dragState;
+				if (!tmpDrag) { return; }
+				let tmpTargetPath = tmpEl.getAttribute('data-node-path');
+				let tmpTargetType = tmpEl.getAttribute('data-node-type') || 'file';
+				let tmpMode = tmpSelf._dropModeFor(tmpDrag, tmpTargetPath, tmpTargetType, pEvent, tmpEl, tmpCaps);
+				pEvent.preventDefault();
+				pEvent.stopPropagation();
+				fClearMarks();
+				if (!tmpMode) { return; }
+
+				if (tmpMode === 'into')
+				{
+					// Move the dragged node into the target folder (keeping its basename).
+					let tmpDestination = tmpTargetPath + '/' + tmpDrag.Name;
+					tmpProvider.requestMoveNode(tmpDrag.Path, tmpDestination);
+					return;
+				}
+
+				// Reorder within the shared parent: rebuild the sibling name list with the
+				// dragged node repositioned before/after the target, then persist.
+				let tmpNames = tmpSelf._gatherSiblingNames(pContainer, tmpDrag.Parent);
+				let tmpFromIdx = tmpNames.indexOf(tmpDrag.Name);
+				let tmpTargetName = tmpSelf._basename(tmpTargetPath);
+				if (tmpFromIdx < 0) { return; }
+				tmpNames.splice(tmpFromIdx, 1);
+				let tmpTargetIdx = tmpNames.indexOf(tmpTargetName);
+				if (tmpTargetIdx < 0) { return; }
+				let tmpInsertIdx = (tmpMode === 'after') ? tmpTargetIdx + 1 : tmpTargetIdx;
+				tmpNames.splice(tmpInsertIdx, 0, tmpDrag.Name);
+				tmpProvider.requestReorder(tmpDrag.Parent, tmpNames);
+			});
+		}
+	}
+
+	/**
+	 * Decide the drop mode for a hovered target: 'into' (move into a folder),
+	 * 'before' / 'after' (reorder within the same parent), or null (not a valid drop).
+	 */
+	_dropModeFor(pDrag, pTargetPath, pTargetType, pEvent, pTargetEl, pCaps)
+	{
+		if (!pTargetPath || pTargetPath === pDrag.Path) { return null; }
+		// Never drop a folder into itself or a descendant.
+		if (pDrag.Type === 'folder' && (pTargetPath === pDrag.Path || pTargetPath.indexOf(pDrag.Path + '/') === 0)) { return null; }
+
+		// Drop onto a different folder that is not already this node's parent -> move in.
+		if (pCaps.move && pTargetType === 'folder' && pTargetPath !== pDrag.Parent)
+		{
+			return 'into';
+		}
+
+		// Same-parent nodes -> reorder (before/after by pointer position).
+		if (pCaps.reorder && this._dirname(pTargetPath) === pDrag.Parent)
+		{
+			let tmpRect = pTargetEl.getBoundingClientRect();
+			let tmpMidpoint = tmpRect.top + (tmpRect.height / 2);
+			return (pEvent.clientY >= tmpMidpoint) ? 'after' : 'before';
+		}
+
+		return null;
 	}
 
 	/**
