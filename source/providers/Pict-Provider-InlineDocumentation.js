@@ -10,6 +10,17 @@ const libViewContent = require('../views/Pict-View-InlineDocumentation-Content.j
 const libViewNav = require('../views/Pict-View-InlineDocumentation-Nav.js');
 const libViewTopicManager = require('../views/Pict-View-InlineDocumentation-TopicManager.js');
 
+// Image files the reader displays directly (as an <img>) rather than parsing as markdown.
+// The server serves each with its real image/* MimeType, so the browser renders it, SVG included.
+const _IMAGE_EXTENSIONS = { png: true, jpg: true, jpeg: true, gif: true, svg: true, webp: true, bmp: true, ico: true };
+
+// The extension of a doc path's last segment, lower-cased, or '' when it carries none.
+function _pathExtension(pPath)
+{
+	let tmpMatch = String(pPath || '').match(/\.([a-z0-9]+)$/i);
+	return tmpMatch ? tmpMatch[1].toLowerCase() : '';
+}
+
 /**
  * Inline Documentation Provider
  *
@@ -101,6 +112,14 @@ class InlineDocumentationProvider extends libPictProvider
 		tmpState.SearchIndexLoaded = false;
 		tmpState.SearchQuery = '';
 		tmpState.SearchResults = [];
+
+		// "Show non-document files" preference. The tree lists documents by default; when the
+		// host enables the toggle (AssetToggleEnabled), the reader can reveal asset files
+		// (images, ...) and the choice is remembered per browser.
+		tmpState.AssetToggleEnabled = (tmpOptions.AssetToggleEnabled !== undefined)
+			? !!tmpOptions.AssetToggleEnabled
+			: (tmpState.AssetToggleEnabled || false);
+		tmpState.ShowAssetFiles = this._readShowAssetFilesPref();
 
 		// External link resolution — paths starting with / in the
 		// sidebar are cross-module references. ExternalDocBaseURL
@@ -243,10 +262,14 @@ class InlineDocumentationProvider extends libPictProvider
 			tmpPath = tmpPath.substring(0, tmpHashIndex);
 		}
 
-		// Ensure .md extension
-		if (!tmpPath.match(/\.md$/))
+		// Only add .md when the path carries no extension of its own. A path that already
+		// names a file type (README.md, guides/layer-model.svg, ...) is served as-is, so an
+		// image is not turned into a 404 by an appended .md.
+		let tmpExtension = _pathExtension(tmpPath);
+		if (!tmpExtension)
 		{
 			tmpPath = tmpPath + '.md';
+			tmpExtension = 'md';
 		}
 
 		// Update state
@@ -255,11 +278,26 @@ class InlineDocumentationProvider extends libPictProvider
 
 		// Render the content view template (creates the container element)
 		tmpContentView.render();
+
+		let tmpURL = (tmpState.DocsBaseURL || '') + tmpPath;
+
+		// An image is displayed directly (the server serves its image/* bytes) — there is no
+		// markdown to parse, so show it in an image viewer instead of fetching + parsing.
+		if (_IMAGE_EXTENSIONS[tmpExtension])
+		{
+			tmpContentView.displayContent(this._buildImageViewerHTML(tmpURL, tmpPath));
+			tmpState.NavCollapsed = true;
+			tmpState.NavFilterText = '';
+			tmpState.SearchQuery = '';
+			tmpState.SearchResults = [];
+			this.pict.views['InlineDoc-Nav'].render();
+			return tmpCallback(null, '');
+		}
+
 		// Show loading indicator
 		tmpContentView.showLoading();
 
 		// Fetch the document
-		let tmpURL = (tmpState.DocsBaseURL || '') + tmpPath;
 		this._fetchDocument(tmpURL, (pError, pHTML) =>
 		{
 			if (pError)
@@ -285,6 +323,28 @@ class InlineDocumentationProvider extends libPictProvider
 
 			return tmpCallback(null, pHTML);
 		});
+	}
+
+	/**
+	 * The content-area HTML for viewing an image document: the image itself (the server serves
+	 * its bytes with the right image/* type, so SVG renders too), captioned with its path and a
+	 * link to open the raw file in a new tab.
+	 *
+	 * @param {string} pURL - The image's source URL (DocsBaseURL + path)
+	 * @param {string} pPath - The lake path (for the caption / filename)
+	 * @returns {string} HTML string for displayContent
+	 */
+	_buildImageViewerHTML(pURL, pPath)
+	{
+		let fEscape = (pText) => String(pText == null ? '' : pText)
+			.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		let tmpName = String(pPath || '').slice(String(pPath || '').lastIndexOf('/') + 1);
+		return '<div class="pict-inline-doc-image-view">'
+			+ '<img class="pict-inline-doc-image" src="' + fEscape(pURL) + '" alt="' + fEscape(tmpName) + '" />'
+			+ '<div class="pict-inline-doc-image-caption">'
+			+ '<span class="pict-inline-doc-image-name">' + fEscape(pPath) + '</span>'
+			+ '<a class="pict-inline-doc-image-open" href="' + fEscape(pURL) + '" target="_blank" rel="noopener">Open original</a>'
+			+ '</div></div>';
 	}
 
 	/**
@@ -2075,6 +2135,31 @@ class InlineDocumentationProvider extends libPictProvider
 		};
 	}
 
+	// ── "show non-document files" preference (persisted per browser) ──────────
+	_showAssetFilesStorageKey() { return 'pict-inline-doc-show-asset-files'; }
+	_readShowAssetFilesPref()
+	{
+		try { return (typeof localStorage !== 'undefined') && localStorage.getItem(this._showAssetFilesStorageKey()) === '1'; }
+		catch (pError) { return false; }
+	}
+	_writeShowAssetFilesPref(pOn)
+	{
+		try { if (typeof localStorage !== 'undefined') { localStorage.setItem(this._showAssetFilesStorageKey(), pOn ? '1' : '0'); } }
+		catch (pError) { /* storage unavailable - the choice just does not persist */ }
+	}
+
+	/**
+	 * Flip the "show non-document files" preference, persist it, and reload the tree so the asset
+	 * files appear or disappear. The Nav toolbar toggle calls this.
+	 */
+	toggleAssetFiles()
+	{
+		let tmpState = this.pict.AppData.InlineDocumentation;
+		tmpState.ShowAssetFiles = !tmpState.ShowAssetFiles;
+		this._writeShowAssetFilesPref(tmpState.ShowAssetFiles);
+		this.reloadSidebar();
+	}
+
 	/**
 	 * Load and parse _sidebar.md from the docs base URL.
 	 *
@@ -2085,8 +2170,11 @@ class InlineDocumentationProvider extends libPictProvider
 		let tmpCallback = (typeof (fCallback) === 'function') ? fCallback : () => {};
 		let tmpState = this.pict.AppData.InlineDocumentation;
 		let tmpDocsBase = tmpState.DocsBaseURL || '';
+		// When the reader is showing asset files, ask the server for the full tree; otherwise it
+		// returns documents only (a server that does not honor the param simply returns everything).
+		let tmpQuery = tmpState.ShowAssetFiles ? '?files=all' : '';
 
-		fetch(tmpDocsBase + '_sidebar.md')
+		fetch(tmpDocsBase + '_sidebar.md' + tmpQuery)
 			.then((pResponse) =>
 			{
 				if (!pResponse.ok)

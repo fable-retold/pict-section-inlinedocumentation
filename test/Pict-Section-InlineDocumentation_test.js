@@ -149,6 +149,31 @@ suite
 
 		suite
 		(
+			'Image documents',
+			() =>
+			{
+				test
+				(
+					'_buildImageViewerHTML renders an <img> for the served URL, not markdown',
+					(fDone) =>
+					{
+						let tmpPict = new libPict({ Product: 'InlineDocTest' });
+						let tmpProvider = tmpPict.addProvider(
+							'Pict-InlineDocumentation',
+							libInlineDocumentation.default_configuration,
+							libInlineDocumentation);
+						let tmpHTML = tmpProvider._buildImageViewerHTML('/1.0/docs/a/board.png', 'a/board.png');
+						libAssert.ok(tmpHTML.indexOf('<img') >= 0, 'Should contain an img element');
+						libAssert.ok(tmpHTML.indexOf('src="/1.0/docs/a/board.png"') >= 0, 'Should point at the served URL');
+						libAssert.ok(tmpHTML.indexOf('a/board.png') >= 0, 'Should caption the path');
+						return fDone();
+					}
+				);
+			}
+		);
+
+		suite
+		(
 			'Sidebar Parsing',
 			() =>
 			{

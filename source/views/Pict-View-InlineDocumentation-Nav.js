@@ -586,7 +586,7 @@ class InlineDocumentationNavView extends libPictView
 	{
 		let tmpCaps = this._structureCaps();
 
-		if (!pState.TopicManagerEnabled && !tmpCaps.any)
+		if (!pState.TopicManagerEnabled && !tmpCaps.any && !pState.AssetToggleEnabled)
 		{
 			return '';
 		}
@@ -610,6 +610,10 @@ class InlineDocumentationNavView extends libPictView
 				+ '<line x1="8" y1="8" x2="8" y2="11.5"/><line x1="6.25" y1="9.75" x2="9.75" y2="9.75"/>'
 				+ '</svg></button>';
 		}
+
+		// "Show non-document files" toggle (host opt-in). Placed after the structure buttons so it
+		// appears in both the read-only and topic-manager toolbars.
+		tmpHTML += this._assetToggleButtonHTML(pState);
 
 		if (!pState.TopicManagerEnabled)
 		{
@@ -643,6 +647,28 @@ class InlineDocumentationNavView extends libPictView
 		tmpHTML += '</div>';
 
 		return tmpHTML;
+	}
+
+	/**
+	 * The "show / hide non-document files" toolbar toggle, rendered only when the host opted in
+	 * (AssetToggleEnabled). Active styling reflects the current preference; the click handler in
+	 * _wireClickHandlers flips it through the provider.
+	 *
+	 * @param {object} pState - The InlineDocumentation state
+	 * @returns {string} HTML for the toggle button, or ''
+	 */
+	_assetToggleButtonHTML(pState)
+	{
+		if (!pState.AssetToggleEnabled)
+		{
+			return '';
+		}
+		let tmpActive = pState.ShowAssetFiles ? ' active' : '';
+		let tmpTitle = pState.ShowAssetFiles ? 'Hide non-document files' : 'Show non-document files';
+		return '<button class="pict-inline-doc-nav-toolbar-btn' + tmpActive + '" id="InlineDoc-Nav-ToggleAssetFiles" title="' + tmpTitle + '">'
+			+ '<svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+			+ '<rect x="2" y="3" width="12" height="10" rx="1"/><circle cx="5.5" cy="6.5" r="1"/><path d="M2.5 11l3.2-3 2.3 2 2-1.6 3.5 3"/>'
+			+ '</svg></button>';
 	}
 
 	/**
@@ -1230,6 +1256,21 @@ class InlineDocumentationNavView extends libPictView
 				if (tmpTopicManagerView)
 				{
 					tmpTopicManagerView.showTopicManager();
+				}
+			});
+		}
+
+		// Show / hide non-document (asset) files toggle
+		let tmpAssetToggleBtn = pContainer.querySelector('#InlineDoc-Nav-ToggleAssetFiles');
+		if (tmpAssetToggleBtn)
+		{
+			tmpAssetToggleBtn.addEventListener('click', (pEvent) =>
+			{
+				pEvent.stopPropagation();
+				let tmpDocProvider = this.pict.providers['Pict-InlineDocumentation'];
+				if (tmpDocProvider && typeof tmpDocProvider.toggleAssetFiles === 'function')
+				{
+					tmpDocProvider.toggleAssetFiles();
 				}
 			});
 		}

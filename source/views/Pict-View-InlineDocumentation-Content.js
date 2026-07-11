@@ -337,6 +337,38 @@ const _ViewConfiguration =
 			letter-spacing: 0.03em;
 			margin-bottom: 0.3em;
 		}
+		/* Image document view (an svg/png/... opened from the tree) */
+		.pict-inline-doc-image-view {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 0.75em;
+			padding: 1.5em;
+		}
+		.pict-inline-doc-image-view .pict-inline-doc-image {
+			max-width: 100%;
+			height: auto;
+			border: 1px solid var(--theme-color-border-default, #E5DED4);
+			border-radius: 6px;
+			background: var(--theme-color-background-panel, #FDFCFA);
+		}
+		.pict-inline-doc-image-caption {
+			display: flex;
+			align-items: center;
+			gap: 1em;
+			font-size: 0.85em;
+			color: var(--theme-color-text-muted, #8A7F72);
+		}
+		.pict-inline-doc-image-name {
+			font-family: 'SFMono-Regular', 'SF Mono', 'Menlo', 'Consolas', monospace;
+		}
+		.pict-inline-doc-image-open {
+			color: var(--theme-color-brand-primary, #2E7D74);
+			text-decoration: none;
+		}
+		.pict-inline-doc-image-open:hover {
+			text-decoration: underline;
+		}
 	`,
 
 	Templates:
