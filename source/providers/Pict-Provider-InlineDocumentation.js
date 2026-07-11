@@ -121,6 +121,12 @@ class InlineDocumentationProvider extends libPictProvider
 			: (tmpState.AssetToggleEnabled || false);
 		tmpState.ShowAssetFiles = this._readShowAssetFilesPref();
 
+		// Whether the tree shows the active document's headings as an in-document outline beneath
+		// it. Defaults on; a host that wants a files-only tree passes ShowDocumentHeadings: false.
+		tmpState.ShowDocumentHeadings = (tmpOptions.ShowDocumentHeadings !== undefined)
+			? !!tmpOptions.ShowDocumentHeadings
+			: (tmpState.ShowDocumentHeadings !== false);
+
 		// External link resolution — paths starting with / in the
 		// sidebar are cross-module references. ExternalDocBaseURL
 		// is prepended to make them full URLs opened in a new tab.

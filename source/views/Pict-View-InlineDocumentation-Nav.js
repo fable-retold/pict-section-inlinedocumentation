@@ -404,8 +404,11 @@ class InlineDocumentationNavView extends libPictView
 		}
 
 		let tmpProvider = this.pict.providers['Pict-InlineDocumentation'];
+		// The active document's headings render as sub-items (an in-document outline) beneath it.
+		// A host can turn that off (ShowDocumentHeadings: false) to keep the tree to files + folders
+		// only; leaving headings out here also keeps them out of the filter match below.
 		let tmpHeadings = [];
-		if (tmpProvider && typeof tmpProvider._extractHeadings === 'function')
+		if (tmpState.ShowDocumentHeadings !== false && tmpProvider && typeof tmpProvider._extractHeadings === 'function')
 		{
 			tmpHeadings = tmpProvider._extractHeadings();
 		}
