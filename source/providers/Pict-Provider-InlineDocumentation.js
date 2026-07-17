@@ -79,7 +79,7 @@ class InlineDocumentationProvider extends libPictProvider
 	 * Sets up application state, loads sidebar navigation and optionally
 	 * topic definitions, then renders the layout.
 	 *
-	 * @param {Object} [pOptions] - Options: { DocsBaseURL, TopicsURL, ContainerAddress }
+	 * @param {Object} [pOptions] - Options: { DocsBaseURL, TopicsURL, ContainerAddress, VocabularyResolver }
 	 * @param {Function} [fCallback] - Callback when initialization is complete
 	 */
 	initializeDocumentation(pOptions, fCallback)
@@ -150,6 +150,15 @@ class InlineDocumentationProvider extends libPictProvider
 		if (typeof tmpOptions.onSave === 'function')
 		{
 			this._onSave = tmpOptions.onSave;
+		}
+
+		// Store the vocabulary resolver if provided. Forwarded as the 4th arg to the content
+		// provider's parseMarkdown() at this module's docs-viewer render call sites, so known
+		// product terms get wrapped in .pict-vocab-term spans for a hover popover. (pWord) =>
+		// { slug, title, short } | null.
+		if (typeof tmpOptions.VocabularyResolver === 'function')
+		{
+			this._VocabularyResolver = tmpOptions.VocabularyResolver;
 		}
 
 		// Store the structure-management callbacks if provided. Each is optional and
@@ -1006,7 +1015,8 @@ class InlineDocumentationProvider extends libPictProvider
 			let tmpHTML = this._ContentProvider.parseMarkdown(
 				tmpMarkdown,
 				this._createLinkResolver(),
-				this._createImageResolver(tmpURL));
+				this._createImageResolver(tmpURL),
+				this._VocabularyResolver);
 			this._ContentCache[tmpURL] = { html: tmpHTML, markdown: tmpMarkdown };
 
 			// Exit edit mode
@@ -2022,7 +2032,8 @@ class InlineDocumentationProvider extends libPictProvider
 				let tmpHTML = this._ContentProvider.parseMarkdown(
 					pMarkdown,
 					this._createLinkResolver(),
-					this._createImageResolver(pURL));
+					this._createImageResolver(pURL),
+					this._VocabularyResolver);
 				this._ContentCache[pURL] = { html: tmpHTML, markdown: pMarkdown };
 				return tmpCallback(null, tmpHTML);
 			})
