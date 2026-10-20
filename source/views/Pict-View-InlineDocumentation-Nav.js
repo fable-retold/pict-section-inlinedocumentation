@@ -110,6 +110,29 @@ const _ViewConfiguration =
 		.pict-inline-doc-nav-group.collapsed .pict-inline-doc-nav-group-items {
 			display: none;
 		}
+		.pict-inline-doc-nav-folder-toggle {
+			margin-right: 0.15em;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 0.8em;
+			height: 0.8em;
+			vertical-align: -0.1em;
+			opacity: 0.6;
+			cursor: pointer;
+			transition: transform 0.15s ease, opacity 0.1s ease;
+		}
+		.pict-inline-doc-nav-folder-toggle svg {
+			width: 100%;
+			height: 100%;
+			display: block;
+		}
+		.pict-inline-doc-nav-folder-toggle:hover {
+			opacity: 1;
+		}
+		.pict-inline-doc-nav-folder-toggle.collapsed {
+			transform: rotate(-90deg);
+		}
 		.pict-inline-doc-nav-item {
 			display: block;
 			padding: 0.25em 0.8em 0.25em calc(1.6em + var(--doc-nav-level, 0) * 0.85em);
@@ -859,10 +882,23 @@ class InlineDocumentationNavView extends libPictView
 				}
 			}
 
+			// Folders collapse by hiding their descendants. The item list is flat (each row carries
+			// its own Level for indent), so a collapsed folder is applied as a path prefix: any later
+			// row whose path starts with it is skipped. Folder paths carry a trailing slash, so the
+			// prefix match stops at the directory boundary and never catches a sibling.
+			let tmpHidePrefixes = [];
 			for (let j = 0; j < tmpGroupItems.length; j++)
 			{
 				let tmpItem = tmpGroupItems[j];
 				let tmpIndent = ' style="--doc-nav-level:' + (tmpItem.Level || 0) + '"';
+
+				let tmpItemKey = tmpItem.Path || tmpItem.FolderPath || '';
+				let tmpHiddenUnderFolder = false;
+				for (let h = 0; h < tmpHidePrefixes.length; h++)
+				{
+					if (tmpItemKey && tmpItemKey.indexOf(tmpHidePrefixes[h]) === 0) { tmpHiddenUnderFolder = true; break; }
+				}
+				if (tmpHiddenUnderFolder) { continue; }
 
 				// Sub-folder node (no document of its own). Indent it by its
 				// level and, when it has descendants, make it clickable so it
@@ -874,16 +910,26 @@ class InlineDocumentationNavView extends libPictView
 					let tmpFolderPath = tmpItem.FolderPath || '';
 					let tmpFolderDrag = this._dragAttrs(tmpFolderPath, 'folder', tmpCaps);
 					let tmpFolderActions = this._nodeActionsHTML(tmpFolderPath, 'folder', tmpCaps);
+					let tmpFolderCollapsed = !!(pState.CollapsedFolders && pState.CollapsedFolders[tmpFolderPath]);
 					if (tmpItem.FirstChildPath)
 					{
 						// Folders are navigational shortcuts to their first child; the
 						// child item carries the active highlight, so the folder doesn't.
+						// The chevron collapses the folder (hides its descendants) without
+						// navigating -- its click is stopped in _wireClickHandlers.
+						let tmpFolderToggle = '<span class="pict-inline-doc-nav-folder-toggle' + (tmpFolderCollapsed ? ' collapsed' : '')
+							+ '" data-folder-toggle="' + this._escapeHTML(tmpFolderPath) + '" title="Collapse or expand this folder">'
+							+ '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 8 11 13 6"/></svg>'
+							+ '</span>';
 						tmpHTML += '<a class="pict-inline-doc-nav-item pict-inline-doc-nav-folder'
 							+ '" data-doc-path="' + this._escapeHTML(tmpItem.FirstChildPath) + '"' + tmpIndent + tmpFolderDrag + '>'
+							+ tmpFolderToggle
 							+ this._folderIconSVG()
 							+ this._escapeHTML(tmpItem.Name)
 							+ tmpFolderActions
 							+ '</a>';
+						// A collapsed folder hides every later row under its path.
+						if (tmpFolderCollapsed) { tmpHidePrefixes.push(tmpFolderPath); }
 					}
 					else
 					{
@@ -1234,6 +1280,32 @@ class InlineDocumentationNavView extends libPictView
 						}
 					}
 				}
+			});
+		}
+
+		// Sub-folder collapse toggle. Clicking the chevron must not navigate (the folder row is a
+		// link to its first child) or bubble to the group header, so it stops both. The item list is
+		// flat, so collapsing re-renders the nav (descendants are skipped on rebuild); preserve the
+		// scroll position so collapsing a deep folder does not jump the sidebar to the top.
+		let tmpFolderToggles = pContainer.querySelectorAll('[data-folder-toggle]');
+		for (let i = 0; i < tmpFolderToggles.length; i++)
+		{
+			let tmpFolderToggle = tmpFolderToggles[i];
+			tmpFolderToggle.addEventListener('click', (pEvent) =>
+			{
+				pEvent.stopPropagation();
+				pEvent.preventDefault();
+				if (!tmpState) { return; }
+				let tmpFolderPath = tmpFolderToggle.getAttribute('data-folder-toggle');
+				if (!tmpFolderPath) { return; }
+				if (!tmpState.CollapsedFolders) { tmpState.CollapsedFolders = {}; }
+				if (tmpState.CollapsedFolders[tmpFolderPath]) { delete tmpState.CollapsedFolders[tmpFolderPath]; }
+				else { tmpState.CollapsedFolders[tmpFolderPath] = true; }
+				let tmpOutline = document.getElementById('InlineDoc-Nav-Outline');
+				let tmpScrollTop = tmpOutline ? tmpOutline.scrollTop : 0;
+				tmpSelf._renderNavigation();
+				let tmpOutlineAfter = document.getElementById('InlineDoc-Nav-Outline');
+				if (tmpOutlineAfter) { tmpOutlineAfter.scrollTop = tmpScrollTop; }
 			});
 		}
 
