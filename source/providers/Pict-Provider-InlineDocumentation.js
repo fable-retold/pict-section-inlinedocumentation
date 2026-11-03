@@ -2530,7 +2530,7 @@ class InlineDocumentationProvider extends libPictProvider
 
 	/**
 	 * Normalize a document path from sidebar links.
-	 * Strips leading slashes and ./ prefixes.
+	 * Strips route-style prefixes ("#/page/", "#/"), leading slashes and ./ prefixes.
 	 *
 	 * @param {string} pPath - The raw path
 	 * @returns {string} The normalized path
@@ -2541,7 +2541,8 @@ class InlineDocumentationProvider extends libPictProvider
 		{
 			return '';
 		}
-		return pPath.replace(/^\.\//, '').replace(/^\//, '');
+		// Same prefix stripping as the content link resolver in _createLinkResolver(); the two must not drift.
+		return pPath.replace(/^#\/page\//, '').replace(/^#\//, '').replace(/^\.\//, '').replace(/^\//, '');
 	}
 
 	/**
