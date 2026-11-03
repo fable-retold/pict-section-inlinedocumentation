@@ -240,6 +240,33 @@ suite
 						return fDone();
 					}
 				);
+
+				test
+				(
+					'Should strip route-style #/page/ and #/ prefixes so nav links load the document',
+					(fDone) =>
+					{
+						let tmpPict = new libPict({ Product: 'InlineDocTest' });
+
+						let tmpProvider = tmpPict.addProvider(
+							'Pict-InlineDocumentation',
+							libInlineDocumentation.default_configuration,
+							libInlineDocumentation);
+
+						let tmpSidebar = '- [Home](#/page/README.md)\n'
+							+ '- Guide\n'
+							+ '  - [Getting Started](#/page/getting-started.md)\n'
+							+ '  - [Advanced](#/advanced-topics.md#options)\n';
+
+						let tmpGroups = tmpProvider._parseSidebarMarkdown(tmpSidebar);
+
+						libAssert.strictEqual(tmpGroups[0].Path, 'README.md');
+						libAssert.strictEqual(tmpGroups[1].Items[0].Path, 'getting-started.md');
+						libAssert.strictEqual(tmpGroups[1].Items[1].Path, 'advanced-topics.md#options');
+
+						return fDone();
+					}
+				);
 			}
 		);
 
